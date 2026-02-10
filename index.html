@@ -1,92 +1,364 @@
-    // ===== Gallery =====
-    const galleryGrid = document.getElementById("galleryGrid");
-    const lb = document.getElementById("lightbox");
-    const lbImg = document.getElementById("lbImg");
-    const lbChip = document.getElementById("lbChip");
-    const lbClose = document.getElementById("lbClose");
-    const lbPrev = document.getElementById("lbPrev");
-    const lbNext = document.getElementById("lbNext");
-
-    let images = [];
-    let currentIndex = 0;
-
-    // Build gallery
-    for (let i = 1; i <= GALLERY_MAX; i++) {
-      const item = document.createElement("div");
-      item.className = "gItem reveal";
-      
-      const img = document.createElement("img");
-      img.src = `${i}.jpg`;
-      img.alt = `תמונה ${i}`;
-      img.loading = "lazy";
-      
-      const badge = document.createElement("div");
-      badge.className = "gBadge";
-      badge.textContent = `תמונה ${i}`;
-      
-      // Handle load error - hide if image doesn't exist
-      img.onerror = () => {
-        item.style.display = "none";
-      };
-      
-      // Handle successful load
-      img.onload = () => {
-        images.push({ src: `${i}.jpg`, index: i });
-        item.addEventListener("click", () => openLightbox(i - 1));
-        io.observe(item);
-      };
-      
-      item.appendChild(img);
-      item.appendChild(badge);
-      galleryGrid.appendChild(item);
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Floréa | פרחים ומתנות באלגנטיות</title>
+  <style>
+    :root {
+      --bg: #fff8fb;
+      --surface: #ffffffcc;
+      --text: #32242f;
+      --muted: #725e6b;
+      --accent: #d34f8b;
+      --accent-2: #f7b5ce;
+      --gold: #c9a86a;
+      --shadow: 0 16px 40px rgba(90, 32, 65, 0.15);
+      --radius: 18px;
     }
 
-    function openLightbox(index) {
-      if (images.length === 0) return;
-      currentIndex = index;
-      updateLightbox();
-      lb.classList.add("is-open");
-      lb.setAttribute("aria-hidden", "false");
-      document.body.style.overflow = "hidden";
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Heebo", "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at 10% 20%, #ffe5f0 0%, transparent 30%),
+                  radial-gradient(circle at 90% 80%, #ffe0c4 0%, transparent 25%),
+                  var(--bg);
+      overflow-x: hidden;
     }
 
-    function closeLightbox() {
-      lb.classList.remove("is-open");
-      lb.setAttribute("aria-hidden", "true");
-      document.body.style.overflow = "";
+    .petal {
+      position: fixed;
+      width: 14px;
+      height: 14px;
+      border-radius: 14px 0 14px 0;
+      background: linear-gradient(130deg, #ffd5e6, #ffc2da);
+      opacity: 0.5;
+      pointer-events: none;
+      animation: fall linear infinite;
+      z-index: 1;
     }
 
-    function updateLightbox() {
-      if (images[currentIndex]) {
-        lbImg.src = images[currentIndex].src;
-        lbChip.textContent = `תמונה ${images[currentIndex].index} מתוך ${images.length}`;
-      }
+    @keyframes fall {
+      from { transform: translateY(-10vh) rotate(0deg); }
+      to { transform: translateY(110vh) rotate(360deg); }
     }
 
-    function nextImage() {
-      currentIndex = (currentIndex + 1) % images.length;
-      updateLightbox();
+    header {
+      position: sticky;
+      top: 0;
+      backdrop-filter: blur(10px);
+      background: #fffafccc;
+      border-bottom: 1px solid #f3dde8;
+      z-index: 20;
     }
 
-    function prevImage() {
-      currentIndex = (currentIndex - 1 + images.length) % images.length;
-      updateLightbox();
+    .nav {
+      max-width: 1120px;
+      margin: auto;
+      padding: 14px 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
-    // Event listeners
-    lbClose.addEventListener("click", closeLightbox);
-    lbNext.addEventListener("click", nextImage);
-    lbPrev.addEventListener("click", prevImage);
-    
-    lb.addEventListener("click", (e) => {
-      if (e.target === lb) closeLightbox();
+    .brand {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      color: #7d2553;
+    }
+
+    .menu {
+      display: flex;
+      gap: 18px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .menu a { text-decoration: none; color: inherit; }
+
+    .hero {
+      max-width: 1120px;
+      margin: 42px auto 18px;
+      padding: 0 22px;
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 30px;
+      position: relative;
+      z-index: 5;
+    }
+
+    .hero-card {
+      background: var(--surface);
+      border: 1px solid #f7dfe9;
+      border-radius: 26px;
+      box-shadow: var(--shadow);
+      padding: 34px;
+      transform: translateY(26px);
+      opacity: 0;
+      animation: fadeUp .9s .15s forwards;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: #fde8f1;
+      color: #9a2f66;
+      font-size: .9rem;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 14px 0 10px;
+      font-size: clamp(2rem, 4.4vw, 3.4rem);
+      line-height: 1.1;
+    }
+
+    .subtitle { color: var(--muted); font-size: 1.05rem; line-height: 1.65; }
+
+    .cta-row { margin-top: 22px; display: flex; gap: 12px; flex-wrap: wrap; }
+
+    .btn {
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: .25s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #bc3d77);
+      color: white;
+      box-shadow: 0 10px 22px rgba(211, 79, 139, .35);
+    }
+
+    .btn-primary:hover { transform: translateY(-2px) scale(1.02); }
+
+    .btn-soft {
+      background: #fff;
+      color: #8e2e61;
+      border: 1px solid #efc8da;
+    }
+
+    .hero-visual {
+      min-height: 350px;
+      border-radius: 26px;
+      background:
+        linear-gradient(180deg, #fff3f8, #ffeef3),
+        url('https://images.unsplash.com/photo-1525310072745-f49212b5ac6d?auto=format&fit=crop&w=1000&q=80') center/cover;
+      background-blend-mode: soft-light;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+      transform: scale(.96);
+      opacity: 0;
+      animation: popIn 1s .3s forwards;
+    }
+
+    .floating-tag {
+      position: absolute;
+      background: #fff;
+      border: 1px solid #f5d7e4;
+      border-radius: 14px;
+      padding: 10px 14px;
+      font-weight: 700;
+      color: #793052;
+      box-shadow: 0 8px 18px rgba(132, 58, 96, 0.12);
+      animation: floaty 3.3s ease-in-out infinite;
+    }
+
+    .floating-tag.t1 { top: 14%; right: 8%; }
+    .floating-tag.t2 { bottom: 12%; left: 10%; animation-delay: .6s; }
+
+    section {
+      max-width: 1120px;
+      margin: 38px auto;
+      padding: 0 22px;
+      position: relative;
+      z-index: 5;
+    }
+
+    .section-title {
+      font-size: clamp(1.6rem, 2.8vw, 2.3rem);
+      margin: 0 0 14px;
+    }
+
+    .products {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid #f4d9e6;
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 10px 28px rgba(122, 45, 84, 0.1);
+      transform: translateY(18px);
+      opacity: 0;
+      transition: transform .25s ease, box-shadow .25s ease;
+    }
+
+    .card.revealed { animation: fadeUp .75s forwards; }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 16px 32px rgba(122, 45, 84, 0.16); }
+
+    .card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .card-body { padding: 14px; }
+    .price { color: #8a315e; font-weight: 800; }
+
+    .promo {
+      margin-top: 26px;
+      padding: 26px;
+      border-radius: 20px;
+      background: linear-gradient(120deg, #5f1f43, #8f3765);
+      color: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      box-shadow: 0 20px 38px rgba(95, 31, 67, 0.36);
+    }
+
+    .promo strong { color: #ffe1a8; }
+
+    footer {
+      margin-top: 34px;
+      padding: 30px 20px;
+      text-align: center;
+      background: #fff;
+      border-top: 1px solid #f3dce8;
+      color: #7a5d6f;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(.92); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes floaty {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    @media (max-width: 860px) {
+      .hero { grid-template-columns: 1fr; }
+      .menu { display: none; }
+      .promo { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav class="nav">
+      <div class="brand">Floréa Boutique</div>
+      <div class="menu">
+        <a href="#home">בית</a>
+        <a href="#products">קולקציה</a>
+        <a href="#gifts">מתנות</a>
+        <a href="#contact">צור קשר</a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="home">
+    <section class="hero">
+      <article class="hero-card">
+        <span class="eyebrow">משלוחים מהיום להיום</span>
+        <h1>עיצוב פרחים ומתנות<br/>יפה, יוקרתי ובלתי נשכח</h1>
+        <p class="subtitle">ברוכים הבאים לחנות בוטיק שמתמחה בזרים מרהיבים, מארזי מתנה מעוצבים ואווירה אלגנטית לכל אירוע. כל פריט מורכב באהבה עם תשומת לב לפרטים הקטנים.</p>
+        <div class="cta-row">
+          <button class="btn btn-primary">להזמנה מהירה</button>
+          <button class="btn btn-soft">צפייה בקטלוג</button>
+        </div>
+      </article>
+      <aside class="hero-visual" aria-label="זרי פרחים">
+        <div class="floating-tag t1">🌷 קולקציית פרימיום</div>
+        <div class="floating-tag t2">🎁 מארזי מתנה אישיים</div>
+      </aside>
+    </section>
+
+    <section id="products">
+      <h2 class="section-title">הנמכרים ביותר</h2>
+      <div class="products">
+        <article class="card reveal">
+          <img src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=900&q=80" alt="זר ורדים ורוד" />
+          <div class="card-body"><h3>זר ורדים "Velvet Rose"</h3><p>סידור יוקרתי בגווני ורוד ופודרה.</p><p class="price">₪289</p></div>
+        </article>
+        <article class="card reveal">
+          <img src="https://images.unsplash.com/photo-1478146059778-26028b07395a?auto=format&fit=crop&w=900&q=80" alt="מארז מתנה" />
+          <div class="card-body"><h3>מארז מתנה "Golden Touch"</h3><p>פרחים, שוקולד ויין באריזת פרימיום.</p><p class="price">₪349</p></div>
+        </article>
+        <article class="card reveal">
+          <img src="https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&w=900&q=80" alt="סידור לבן" />
+          <div class="card-body"><h3>סידור "Ivory Bloom"</h3><p>נראות נקייה ואלגנטית לשולחן חגיגי.</p><p class="price">₪259</p></div>
+        </article>
+        <article class="card reveal">
+          <img src="https://images.unsplash.com/photo-1519378058457-4c29a0a2efac?auto=format&fit=crop&w=900&q=80" alt="קופסת פרחים" />
+          <div class="card-body"><h3>קופסת הפתעה "Blush Box"</h3><p>מתנה מרשימה עם פרחים וניחוח בוטיק.</p><p class="price">₪219</p></div>
+        </article>
+      </div>
+
+      <div class="promo" id="gifts">
+        <div>
+          <h3 style="margin:0 0 6px;">מבצע שבועי אלגנטי</h3>
+          <p style="margin:0;">קונים זר ומקבלים <strong>20% הנחה</strong> על מארז מתנה משלים.</p>
+        </div>
+        <button class="btn btn-soft" style="background:#fff6fb;">למימוש ההטבה</button>
+      </div>
+    </section>
+  </main>
+
+  <footer id="contact">
+    Floréa Boutique · הזמנות בטלפון 03-5551234 · משלוחים לכל הארץ
+  </footer>
+
+  <script>
+    // reveal on scroll
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          e.target.classList.add('revealed');
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.2 });
+
+    document.querySelectorAll('.reveal').forEach((card, i) => {
+      card.style.animationDelay = `${i * 0.08}s`;
+      io.observe(card);
     });
 
-    // Keyboard navigation
-    document.addEventListener("keydown", (e) => {
-      if (!lb.classList.contains("is-open")) return;
-      
-      if (e.key === "Escape") closeLightbox();
-      if (e.key === "ArrowRight") prevImage(); // RTL
-      if (e.key === "ArrowLeft") nextImage();  // RTL
-    });
+    // falling petals
+    const makePetal = () => {
+      const p = document.createElement('span');
+      p.className = 'petal';
+      p.style.left = `${Math.random() * 100}vw`;
+      p.style.animationDuration = `${6 + Math.random() * 8}s`;
+      p.style.opacity = (0.25 + Math.random() * 0.35).toFixed(2);
+      p.style.transform = `scale(${0.6 + Math.random() * 1.1})`;
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 14000);
+    };
+
+    setInterval(makePetal, 420);
+    for (let i = 0; i < 12; i++) setTimeout(makePetal, i * 150);
+  </script>
+</body>
+</html>
